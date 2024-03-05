@@ -127,6 +127,10 @@ private:
         return query_words;
     }
 
+    double CalculateTfIdfRelevance(const double& tf, const string& word) const {
+        return tf * log((document_count_ + 0.0) / word_to_document_freqs_.at(word).size());
+    }
+
     vector<Document> FindAllDocuments(const Query& query_words) const {
         map<int, double> document_to_relevance; // Ключ id найденного документа и релевантность документа.
 
@@ -137,7 +141,7 @@ private:
         for (const string& word : query_words.plus) {
             if (word_to_document_freqs_.contains(word)) {
                 for (const auto& [id, tf] : word_to_document_freqs_.at(word)) {
-                    document_to_relevance[id] += tf * log((document_count_ + 0.0) / word_to_document_freqs_.at(word).size());
+                    document_to_relevance[id] += CalculateTfIdfRelevance(tf, word);
                 }
             }
         }
