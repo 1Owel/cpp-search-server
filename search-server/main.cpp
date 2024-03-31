@@ -77,8 +77,6 @@ enum class DocumentStatus {
 class SearchServer {
 public:
 
-    inline static constexpr int INVALID_DOCUMENT_ID = -1;
-
     template <typename StringCollection>
     explicit SearchServer(const StringCollection& stop_words) {
             for (const string& word : stop_words) {
@@ -90,22 +88,17 @@ public:
         }
     }
 
-    explicit SearchServer(const string& text) {
-        if (!CheckSpecialSymbols(text)) {
-            throw invalid_argument("Спецсимвол в строке для создания стоп слов"s);
-        }
-        for (const string& word : SplitIntoWords(text)) {
-            stop_words_.insert(word);
-        }
+    explicit SearchServer(const string& text)
+    : SearchServer(SplitIntoWords(text)) 
+    {
     }
 
     void AddDocument(int document_id, const string& document, DocumentStatus status,
                                    const vector<int>& ratings) {
-        if (document_id < 0 || documents_.count(document_id)) {
-            throw invalid_argument("ID документа отрицательный, либо документ с таким ID уже существует"s);
-        }
-        if (!CheckSpecialSymbols(document)) {
-            throw invalid_argument("Спецсимвол в строке добавляемого документа"s);
+        if (document_id < 0) {
+            throw invalid_argument("ID документа отрицательный"s);
+        } else if (documents_.count(document_id)) {
+            throw invalid_argument("Документ с таким ID уже существует"s);
         }
         const vector<string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
@@ -113,6 +106,7 @@ public:
             word_to_document_freqs_[word][document_id] += inv_word_count;
         }
         documents_.emplace(document_id, DocumentData{ ComputeAverageRating(ratings), status });
+        doc_ids_in_added_order_.push_back(document_id);
     }
 
     template<typename SortBy>
@@ -175,14 +169,7 @@ public:
 
     int GetDocumentId(int index) const {
         if (index >= 0 && index < documents_.size()) {
-            int current_index = 0;
-            for (auto [i, doc_data] : documents_) {
-                if (index != current_index) {
-                    ++current_index;
-                } else {
-                    return i;
-                }
-            }        
+            return doc_ids_in_added_order_[index];
         }
         throw out_of_range("Индекс выходит за пределы имеющихся документов"s);
     }
@@ -196,6 +183,7 @@ private:
     set<string> stop_words_;
     map<string, map<int, double>> word_to_document_freqs_;
     map<int, DocumentData> documents_;
+    vector<int> doc_ids_in_added_order_;
 
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
@@ -204,7 +192,9 @@ private:
     vector<string> SplitIntoWordsNoStop(const string& text) const {
         vector<string> words;
         for (const string& word : SplitIntoWords(text)) {
-            if (!IsStopWord(word)) {
+            if (!CheckSpecialSymbols(word)) {
+                throw invalid_argument("Спецсимвол в слове" + word + "добавляемого документа"s);
+            } else if (!IsStopWord(word)) {
                 words.push_back(word);
             }
         }
@@ -236,6 +226,9 @@ private:
     }
 
     QueryWord ParseQueryWord(string text) const {
+        if (!CheckSpecialSymbols(text)) {
+            throw invalid_argument("Обнаружены спецсимволы в запросе: "s + text);
+        }
         bool is_minus = false;
         // Word shouldn't be empty
         if (text[0] == '-') {
@@ -258,11 +251,6 @@ private:
         Query query;
         for (const string& word : SplitIntoWords(text)) {
             auto query_word = ParseQueryWord(word);
-            {
-            if (!CheckSpecialSymbols(word)) {
-                throw invalid_argument("Обнаружены спецсимволы в запросе"s);
-            }
-            }
             if (!query_word.is_stop) {
                 if (query_word.is_minus) {
                     query.minus_words.insert(query_word.data);
@@ -312,4 +300,3 @@ private:
         return matched_documents;
     }
 };
-
