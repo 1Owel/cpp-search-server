@@ -168,10 +168,7 @@ public:
     }
 
     int GetDocumentId(int index) const {
-        if (index >= 0 && index < documents_.size()) {
-            return doc_ids_in_added_order_[index];
-        }
-        throw out_of_range("Индекс выходит за пределы имеющихся документов"s);
+            return doc_ids_in_added_order_.at(index);
     }
 
 private:
@@ -217,8 +214,7 @@ private:
 
     bool CheckSpecialSymbols(const string& text) const {
         for (char i : text) {
-            const int code = i + 0;
-            if (code >= 0 && code <= 31) {
+            if (i >= 0 && i <= 31) { // Char codes filter
                 return false;
             }
         }
