@@ -65,7 +65,7 @@
     std::vector<std::string> SearchServer::SplitIntoWordsNoStop(const std::string& text) const {
         std::vector<std::string> words;
         for (const std::string& word : SplitIntoWords(text)) {
-            if (!IsValidWord(word)) {
+            if (!SearchServer::IsValidWord(word)) {
                 throw std::invalid_argument("Word " + word + " is invalid");
             }
             if (!IsStopWord(word)) {
@@ -83,10 +83,10 @@
         for (const int rating : ratings) {
             rating_sum += rating;
         }
-        return rating_sum / static_cast<int>(ratings.size());
+        return rating_sum / int(ratings.size());
     }
 
-    QueryWord SearchServer::ParseQueryWord(const std::string& text) const {
+    SearchServer::QueryWord SearchServer::ParseQueryWord(const std::string& text) const {
         if (text.empty()) {
             throw std::invalid_argument("Query word is empty");
         }
@@ -96,14 +96,14 @@
             is_minus = true;
             word = word.substr(1);
         }
-        if (word.empty() || word[0] == '-' || !IsValidWord(word)) {
+        if (word.empty() || word[0] == '-' || !SearchServer::IsValidWord(word)) {
             throw std::invalid_argument("Query word " + text + " is invalid");
         }
 
         return {word, is_minus, IsStopWord(word)};
     }
 
-    Query SearchServer::ParseQuery(const std::string& text) const {
+    SearchServer::Query SearchServer::ParseQuery(const std::string& text) const {
         Query result;
         for (const std::string& word : SplitIntoWords(text)) {
             const auto query_word = ParseQueryWord(word);
@@ -118,6 +118,6 @@
         return result;
     }
 
-    double ComputeWordInverseDocumentFreq(const std::string& word) const {
-        return std::log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
+    double SearchServer::ComputeWordInverseDocumentFreq(const std::string& word) const {
+        return std::log(SearchServer::GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
     }

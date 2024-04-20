@@ -19,15 +19,6 @@
         return no_docs_result_count_;
     }
 
-    struct RequestQueue::QueryResult {
-        QueryResult(uint64_t m_docs_count, uint64_t q_time)
-        : matched_docs_count(m_docs_count)
-        , query_time(q_time) {}
-        // определите, что должно быть в структуре
-        uint64_t matched_docs_count;
-        uint64_t query_time;
-    };
-
     void RequestQueue::CalculateRequest(const std::vector<Document>& result) {
         ++current_time_;
         if (result.empty()) {

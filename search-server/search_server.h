@@ -13,7 +13,6 @@
 
 #include "document.h"
 #include "string_processing.h"
-#include "request_queue.h"
 #include "string_processing.h"
 #include "read_input_functions.h"
 #include "paginator.h"
@@ -77,7 +76,9 @@ public:
         return documents_.size();
     }
 
-    int GetDocumentId(int index) const;
+    int GetDocumentId(int index) const {
+        return document_ids_.at(index);
+    }
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query,
                                                         int document_id) const;
@@ -94,7 +95,7 @@ private:
 
     bool IsStopWord(const std::string& word) const;
 
-    bool IsValidWord(const std::string& word);
+    static bool IsValidWord(const std::string& word);
 
     std::vector<std::string> SplitIntoWordsNoStop(const std::string& text) const;
 

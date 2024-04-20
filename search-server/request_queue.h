@@ -25,10 +25,17 @@ public:
     int GetNoResultRequests() const;
 
 private:
-    struct QueryResult;
+    struct QueryResult {
+        QueryResult(uint64_t m_docs_count, uint64_t q_time)
+        : matched_docs_count(m_docs_count)
+        , query_time(q_time) {}
+        // определите, что должно быть в структуре
+        uint64_t matched_docs_count;
+        uint64_t query_time;
+    };
 
     std::deque<QueryResult> requests_;
-    const static int min_in_day_ = 1440;
+    const int min_in_day_ = 1440;
     const SearchServer& search_server_;
     // возможно, здесь вам понадобится что-то ещё
 
