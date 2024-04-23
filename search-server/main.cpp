@@ -1,14 +1,5 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <deque>
 #include <iostream>
-#include <map>
-#include <set>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
+
 
 #include "document.h"
 #include "paginator.h"
@@ -29,12 +20,6 @@ std::ostream& operator<<(std::ostream& out, const std::pair<Iterator, Iterator>&
     for (auto pointer = page_ranges.first ; pointer < page_ranges.second ; ++pointer) {
     out << *pointer;
     }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const Document& document) {
-    using namespace std;
-    out << "{ document_id = "s << document.id << ", relevance = "s << document.relevance << ", rating = "s << document.rating << " }"s;
     return out;
 }
 

@@ -19,23 +19,10 @@
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
-enum class DocumentStatus {
-    ACTUAL,
-    IRRELEVANT,
-    BANNED,
-    REMOVED,
-};
-
 class SearchServer {
 public:
     template <typename StringContainer>
-    SearchServer(const StringContainer& stop_words)
-        : stop_words_(MakeUniqueNonEmptyStrings(stop_words))  // Extract non-empty stop words
-    {
-        if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
-            throw std::invalid_argument("Some of stop words are invalid");
-        }
-    }
+    SearchServer(const StringContainer& stop_words);
 
     SearchServer(const std::string& stop_words_text)
         : SearchServer(
@@ -48,26 +35,7 @@ public:
 
     template <typename DocumentPredicate>
     std::vector<Document> FindTopDocuments(const std::string& raw_query,
-                                      DocumentPredicate document_predicate) const {
-        const auto query = ParseQuery(raw_query);
-
-        auto matched_documents = FindAllDocuments(query, document_predicate);
-
-        sort(matched_documents.begin(), matched_documents.end(),
-             [](const Document& lhs, const Document& rhs) {
-                 if (std::abs(lhs.relevance - rhs.relevance) < 1e-6) {
-                     return lhs.rating > rhs.rating;
-                 } else {
-                     return lhs.relevance > rhs.relevance;
-                 }
-             });
-        if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
-            matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
-        }
-
-        return matched_documents;
-    }
-
+                                      DocumentPredicate document_predicate) const;
     std::vector<Document> FindTopDocuments(const std::string& raw_query, DocumentStatus status) const;
 
     std::vector<Document> FindTopDocuments(const std::string& raw_query) const;
@@ -153,3 +121,35 @@ private:
         return matched_documents;
     }
 };
+
+template <typename StringContainer>
+SearchServer::SearchServer(const StringContainer& stop_words)
+    : stop_words_(MakeUniqueNonEmptyStrings(stop_words))  // Extract non-empty stop words
+{
+    if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
+        throw std::invalid_argument("Some of stop words are invalid");
+    }
+}
+
+template <typename DocumentPredicate>
+std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
+                                  DocumentPredicate document_predicate) const {
+    const auto query = ParseQuery(raw_query);
+
+    auto matched_documents = FindAllDocuments(query, document_predicate);
+    sort(matched_documents.begin(), matched_documents.end(),
+         [](const Document& lhs, const Document& rhs) {
+            const double max_difference_for_equal_dubles = 1e-6;
+             if (std::abs(lhs.relevance - rhs.relevance) < max_difference_for_equal_dubles) {
+                 return lhs.rating > rhs.rating;
+             } else {
+                 return lhs.relevance > rhs.relevance;
+             }
+         });
+    if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
+        matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
+    }
+
+    return matched_documents;
+}
+
