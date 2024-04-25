@@ -1,7 +1,3 @@
-#include <iostream>
-
-
-#include "document.h"
 #include "paginator.h"
 #include "read_input_functions.h"
 #include "request_queue.h"
